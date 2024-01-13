@@ -1,0 +1,12 @@
+chat: "CHAT ID"
+console: "CONSOLE ID"
+guild: "guild ID"
+token: "your-token-here"
+activity: "helping on X"
+NoPerms: "You don't have permission to use this command!"
+staffRoleId: "1234"
+fullBotAccess:
+  - '109499081450825688284'            # that's how the ID should look like
+                                     # add more ID's as needed
+fullTrollAccess:
+  - '10949908145078358284'

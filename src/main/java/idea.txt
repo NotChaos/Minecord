@@ -1,0 +1,7 @@
+1. DC bot online
+2. Bot change about me + activity
+3. show players
+4. dc command for player list
+5. !dc - mc console
+6. !dc - mc chat
+7. dc command : show player info

@@ -1,0 +1,20 @@
+name: Minecord
+version: '${project.version}'
+main: Rest.Main
+api-version: '1.18'
+commands:
+  Minecord:
+    description: Commands which interact with the plugin itself.
+    permission: Minecord.reload
+  Blockdc:
+    description: Blocks the console from discord.
+    permission: Minecord.blockdc
+  freeze:
+    description: Freezes the chosen player.
+    permission: Minecord.freeze
+  tempmute:
+    description: Mutes a player.
+    permission: Minecord.mute
+  unmute:
+    description: Unmutes a player.
+    permission: Minecord.unmute
