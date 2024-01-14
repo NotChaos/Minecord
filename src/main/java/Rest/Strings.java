@@ -21,6 +21,7 @@ public class Strings {
     public static Map<Player, String> frozenPlayerDc = new HashMap<>();
     public static Map<String, Player> didFreezePlayerDc = new HashMap<>();
     public static Map<String, String> serverId = Main.serverId;
+    public static Map<Player, Boolean> itemBreak = new HashMap<>();
     public static String pl() {
         return "Minecord";
     }
@@ -32,6 +33,13 @@ public class Strings {
     }
     public static List trollAccess(){
         return config.getList("fullTrollAccess");
+    }
+    public static String trollRole() {
+        return config.getString("fullTrollAccessRole");
+    }
+
+    public static List bannedCmdList() {
+        return config.getList("bannedCommands");
     }
 
     public static String chat() {
@@ -60,6 +68,12 @@ public class Strings {
 
     public static String staffRoleId() {
         return config.getString("staffRoleId");
+    }
+    public static String manageRoleId() {
+        return config.getString("managingRoleId");
+    }
+    public static String broadcastRoleId() {
+        return config.getString("broadcastRoleId");
     }
     public static String MinecordLogs;
     public static boolean dcblocked = false;

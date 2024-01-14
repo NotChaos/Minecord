@@ -144,35 +144,45 @@ public class Minecraft {
     static final Map<String, Long> cooldowns = new HashMap<>();
 
     public static void executeCommand(String cmd, String user) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            long currentTime = Instant.now().getEpochSecond();
+        List<String> cmdList = Strings.bannedCmdList();
+        boolean isBanned = cmdList.stream().anyMatch(cmd::startsWith);
+        
+        if (!isBanned) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                long currentTime = Instant.now().getEpochSecond();
 
-            if (!cooldowns.containsKey(user)) {
+                if (!cooldowns.containsKey(user)) {
 
-                if (!Strings.dcblocked) {
-                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), cmd);
-                    cooldowns.put(user, currentTime + 5);
-                }
-            } else {
-                long cooldownEndTime = cooldowns.get(user);
-                if (currentTime >= cooldownEndTime) {
                     if (!Strings.dcblocked) {
                         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), cmd);
-                        cooldowns.put(user, currentTime + 5);
+                        cooldowns.put(user, currentTime + 20);
                     }
                 } else {
-                    Bukkit.getLogger().info(user + " still has a cooldown. Time remaining: " + (cooldownEndTime - currentTime) + " seconds");
+                    long cooldownEndTime = cooldowns.get(user);
+                    if (!(currentTime >= cooldownEndTime)) {
+                        Bukkit.getLogger().info(user + " still has a cooldown. Time remaining: " + (cooldownEndTime - currentTime) + " seconds");
+                    }
+                    if (!Strings.dcblocked) {
+                        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), cmd);
+                        cooldowns.put(user, currentTime + 20);
+                    }
+
                 }
-            }
-        });
+            });
+        }
     }
 
     public static void executeInstantCommand(String cmd) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            if (!Strings.dcblocked) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), cmd);
-            }
-        });
+        List<String> cmdList = Strings.bannedCmdList();
+        boolean isBanned = cmdList.stream().anyMatch(cmd::startsWith);
+
+        if (!isBanned) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (!Strings.dcblocked) {
+                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), cmd);
+                }
+            });
+        }
     }
     public static void rotatePlayer180Degrees(Player player) {
         Location location = player.getLocation();

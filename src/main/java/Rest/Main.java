@@ -1,22 +1,21 @@
 package Rest;
 
 import Commands.*;
-import Events.MoveEvent;
-import Events.OpenInvEvent;
-import Events.PlayerChatEvent;
-import Events.PlayerLeaveEvent;
+import Events.*;
 import TC.MinecordTC;
 import Utils.MuteManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.Configuration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.*;
 import java.util.HashMap;
@@ -57,7 +56,7 @@ public class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new PlayerChatEvent(), this);
         getServer().getPluginManager().registerEvents(new PlayerLeaveEvent(), this);
         getServer().getPluginManager().registerEvents(new MoveEvent(), this);
-        getServer().getPluginManager().registerEvents(new OpenInvEvent(), this);
+        getServer().getPluginManager().registerEvents(new BreakEvent(), this);
         getServer().getPluginManager().registerEvents(this, this);
         Objects.requireNonNull(getCommand("blockdc")).setExecutor(new BlockDC());
         Objects.requireNonNull(getCommand("unmute")).setExecutor(new Unmute());
@@ -66,7 +65,7 @@ public class Main extends JavaPlugin implements Listener {
         Objects.requireNonNull(getCommand(Strings.pl())).setExecutor(new Minecord());
         Objects.requireNonNull(getCommand(Strings.pl())).setTabCompleter(new MinecordTC());
         loadHashMaps();
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> MuteManager.checkAndRemoveExpiredMutes(), 0L, 1200L);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, MuteManager::checkAndRemoveExpiredMutes, 0L, 1200L);
         MuteManager muteManager = new MuteManager(getDataFolder());
         muteManager.loadMutedPlayersFromFile();
     }
@@ -87,12 +86,18 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public static void nukePlayer(Player player) {
-
         Location loc = player.getLocation();
         World world = player.getWorld();
 
         if (Objects.requireNonNull(Bukkit.getPlayer(player.getName())).isOnline()) {
-            world.createExplosion(loc, 30, true);
+            for (int x = -1; x <= 1; x++) {
+                for (int y = 20; y <= 28; y++) {
+                    for (int z = -1; z <= 1; z++) {
+                        Location tntLoc = new Location(world, loc.getX() + x, loc.getY() + y, loc.getZ() + z);
+                        world.spawnEntity(tntLoc, EntityType.PRIMED_TNT);
+                    }
+                }
+            }
         }
     }
 

@@ -4,9 +4,22 @@ guild: "guild ID"
 token: "your-token-here"
 activity: "helping on X"
 NoPerms: "You don't have permission to use this command!"
-staffRoleId: "1234"
+staffRoleId: "1234"                   # this is the ID of an role (nearly full access to moderation dashboard with ban, kick, freeze etc.)  NOT OP AND CONSOLE
+managingRoleId: "50949908145078358284"   # this person can logout the bot etc. via the manage dashboard and have full access to the moderation dashboard
+broadcastRoleId: "50949908145078358284"   # this person can use the broadcast button (users with the managing role are also allowed to use this by default)
 fullBotAccess:
   - '109499081450825688284'            # that's how the ID should look like
-                                     # add more ID's as needed
+                                       # add more ID's as needed
 fullTrollAccess:
-  - '10949908145078358284'
+  - '10949908145078358284'                    # this has to be an ID of a discord user
+fullTrollAccessRole: "1195831051392850177"    # this neeeds to be a role ID
+bannedCommands:                               # only the beginning is needed, you may change those
+  - "ban"
+  - "kill"
+  - "stop"
+  - "minecraft"
+  - "restart"
+  - "reload"
+  - "minecord"
+  - "kick"
+  - "execute"

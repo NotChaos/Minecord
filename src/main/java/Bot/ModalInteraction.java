@@ -17,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,100 +48,108 @@ public class ModalInteraction extends ListenerAdapter implements EventListener {
                 Discord.log("nuke interaction", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " nuked the player ``" + p2.getName() + "``", Color.RED);
                 break;
 
-case "message-modal":
-    handlePlayerModal(
-        e,
-        Objects.requireNonNull(e.getValue("message-player")).getAsString(),
-        p -> p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Staff message: " + ChatColor.RESET + "" + ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(e.getValue("message-msg")).getAsString())),
-        "Message interaction",
-        " sent the message ``" + Objects.requireNonNull(e.getValue("message-msg")).getAsString() + "`` to the player ``" + Objects.requireNonNull(e.getValue("message-player")).getAsString() + "``."
-    );
-    break;
+            case "message-modal":
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("message-player")).getAsString(),
+                        p -> p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Staff message: " + ChatColor.RESET + "" + ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(e.getValue("message-msg")).getAsString())),
+                        "Message interaction",
+                        " sent the message ``" + Objects.requireNonNull(e.getValue("message-msg")).getAsString() + "`` to the player ``" + Objects.requireNonNull(e.getValue("message-player")).getAsString() + "``."
+                );
+                break;
 
-case "invclose-modal":
-    handlePlayerModal(
-        e,
-        Objects.requireNonNull(e.getValue("invclose-player")).getAsString(),
-        p -> Bukkit.getScheduler().runTask(Main.plugin, p::closeInventory),
-        "Close inventory interaction",
-        " closed the inventory from ``" + Objects.requireNonNull(e.getValue("invclose-player")).getAsString() + "``."
-    );
-    break;
+            case "invclose-modal":
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("invclose-player")).getAsString(),
+                        p -> Bukkit.getScheduler().runTask(Main.plugin, p::closeInventory),
+                        "Close inventory interaction",
+                        " closed the inventory from ``" + Objects.requireNonNull(e.getValue("invclose-player")).getAsString() + "``."
+                );
+                break;
 
-case "broadcast-modal":
-    // This case is not player-specific, so we don't use handlePlayerModal here
-    String title = Objects.requireNonNull(e.getValue("broadcast-title")).getAsString();
-    String msg2 = Objects.requireNonNull(e.getValue("broadcast-msg")).getAsString();
+            case "broadcast-modal":
+                String title = Objects.requireNonNull(e.getValue("broadcast-title")).getAsString();
+                String msg2 = Objects.requireNonNull(e.getValue("broadcast-msg")).getAsString();
 
-    e.deferReply().setEphemeral(true).queue();
-    announce(title, msg2);
-    Discord.log("Announce interaction", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " announced with the title ``" + title + "`` the message ``" + msg2 + "``.", Color.RED);
-    e.getHook().editOriginal(e.getMember().getAsMention() + " you announced " + title + " with the message " + msg2).queue();
-    break;
+                e.deferReply().setEphemeral(true).queue();
+                announce(title, msg2);
+                Discord.log("Announce interaction", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " announced with the title ``" + title + "`` the message ``" + msg2 + "``.", Color.RED);
+                e.getHook().editOriginal(e.getMember().getAsMention() + " you announced " + title + " with the message " + msg2).queue();
+                break;
 
-case "fakeop-modal":
-    handlePlayerModal(
-        e,
-        Objects.requireNonNull(e.getValue("fakeop-player")).getAsString(),
-        p -> p.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "[Server: Made " + p.getName() + " a server operator]"),
-        "fake op",
-        " sent the fakeop message to ``" + Objects.requireNonNull(e.getValue("fakeop-player")).getAsString() + "``."
-    );
-    break;
+            case "fakeop-modal":
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("fakeop-player")).getAsString(),
+                        p -> p.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "[Server: Made " + p.getName() + " a server operator]"),
+                        "fake op",
+                        " sent the fakeop message to ``" + Objects.requireNonNull(e.getValue("fakeop-player")).getAsString() + "``."
+                );
+                break;
 
-    case "execmd-modal":
-    String cmd = Objects.requireNonNull(e.getValue("execmd-cmd")).getAsString();
-    handlePlayerModal(
-        e,
-        Objects.requireNonNull(e.getValue("execmd-player")).getAsString(),
-        p -> Bukkit.getScheduler().runTask(Main.plugin, () -> p.performCommand(cmd)),
-        "Execute command as player",
-        " sent as ``" + Objects.requireNonNull(e.getValue("execmd-player")).getAsString() + "`` the command ``" + "/" + cmd + "``."
-    );
-    break;
+            case "execmd-modal":
+                String cmd = Objects.requireNonNull(e.getValue("execmd-cmd")).getAsString();
+                String player = Objects.requireNonNull(e.getValue("execmd-player")).getAsString();
 
-    case "ip-modal":
-    handlePlayerModal(
-        e,
-        Objects.requireNonNull(e.getValue("ip-player")).getAsString(),
-        p -> {
-            e.deferReply().setEphemeral(true).queue();
-            Discord.log("IP gathering", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " got the IP from ||" + p.getName() + "|| which is ||" + p.getAddress().getHostName() + "||.", Color.RED);
-            e.getHook().editOriginal("The IP from ||" + p.getName() + "|| is ||" + p.getAddress().getHostName() + "||.").queue();
-        },
-        "IP gathering",
-        Objects.requireNonNull(e.getMember()).getAsMention() + " this player isn't on the server."
-    );
-    break;
+                Player p1 = Bukkit.getPlayer(player);
+
+                List<String> cmdList = Strings.bannedCmdList();
+                boolean isBanned = cmdList.stream().anyMatch(cmd::startsWith);
+
+                if (!isBanned) {
+                    Bukkit.getScheduler().runTask(Main.plugin, () -> p1.performCommand(cmd));
+                }
+
+                assert p1 != null;
+                Discord.log("Execute command as player", Objects.requireNonNull(e.getMember()).getAsMention() + " executed the command ``" + "/" + cmd + "``" + " as ``" + p1.getName() + "``", Color.CYAN);
+
+                e.deferReply().setEphemeral(true).queue();
+                e.getHook().editOriginal("You executed the command ``" + "/" + cmd + "``" + " as ``" + p1.getName() + "``").queue();
+                break;
+
+            case "ip-modal":
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("ip-player")).getAsString(),
+                        p -> {
+                            e.deferReply().setEphemeral(true).queue();
+                            Discord.log("IP gathering", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " got the IP from ||" + p.getName() + "|| which is ||" + p.getAddress().getHostName() + "||.", Color.RED);
+                            e.getHook().editOriginal("The IP from ||" + p.getName() + "|| is ||" + p.getAddress().getHostName() + "||.").queue();
+                        },
+                        "IP gathering",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " this player isn't on the server."
+                );
+                break;
 
             case "burn-modal":
                 handlePlayerModal(
-                    e,
-                    Objects.requireNonNull(e.getValue("burn-player")).getAsString(),
-                    p -> {
-                        e.deferReply().setEphemeral(true).queue();
-                        p.setVisualFire(true);
-                        Bukkit.getScheduler().runTaskLater(Main.plugin, () -> p.setVisualFire(false), 20 * 10);
-                        Discord.log("Player burning", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " burned ``" + p.getName() + "``.", Color.RED);
-                        e.getHook().editOriginal("The player ``" + p.getName() + "`` fakely burns now for 10 seconds.").queue();
-                    },
-                    "Player burning",
-                    Objects.requireNonNull(e.getMember()).getAsMention() + " this player isn't on the server."
+                        e,
+                        Objects.requireNonNull(e.getValue("burn-player")).getAsString(),
+                        p -> {
+                            e.deferReply().setEphemeral(true).queue();
+                            p.setVisualFire(true);
+                            Bukkit.getScheduler().runTaskLater(Main.plugin, () -> p.setVisualFire(false), 20 * 10);
+                            Discord.log("Player burning", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " burned ``" + p.getName() + "``.", Color.RED);
+                            e.getHook().editOriginal("The player ``" + p.getName() + "`` fakely burns now for 10 seconds.").queue();
+                        },
+                        "Player burning",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " this player isn't on the server."
                 );
                 break;
 
             case "demo-modal":
                 handlePlayerModal(
-                    e,
-                    Objects.requireNonNull(e.getValue("demo-player")).getAsString(),
-                    p -> {
-                        e.deferReply().setEphemeral(true).queue();
-                        p.showDemoScreen();
-                        Discord.log("Player demo start", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " gave to ``" + p.getName() + "`` the demo screen.", Color.RED);
-                        e.getHook().editOriginal("The player ``" + p.getName() + "`` got the demo screen.").queue();
-                    },
-                    "Player demo start",
-                    Objects.requireNonNull(e.getMember()).getAsMention() + " this player isn't on the server."
+                        e,
+                        Objects.requireNonNull(e.getValue("demo-player")).getAsString(),
+                        p -> {
+                            e.deferReply().setEphemeral(true).queue();
+                            p.showDemoScreen();
+                            Discord.log("Player demo start", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " gave to ``" + p.getName() + "`` the demo screen.", Color.RED);
+                            e.getHook().editOriginal("The player ``" + p.getName() + "`` got the demo screen.").queue();
+                        },
+                        "Player demo start",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " this player isn't on the server."
                 );
                 break;
 
@@ -291,31 +300,21 @@ case "fakeop-modal":
                 }, 20 * 10);
                 break;
 
-            case "noinv-modal":
-                String value14 = Objects.requireNonNull(e.getValue("noinv-player")).getAsString();
-                Player p14 = Bukkit.getPlayer(value14);
-
-                if (p14 == null) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + p14.getName() + " is an invalid player or offline.").queue();
-                    return;
-                }
-
-                if (Strings.noInv.containsKey(p14)) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(e.getMember().getAsMention() + " the player " + p14.getName() + " already had that troll started.").queue();
-                    return;
-                }
-
-                e.deferReply().setEphemeral(true).queue();
-
-                Strings.noInv.put(p14, e.getMember().getAsMention());
-                Discord.log("Lag troll", "The user " + e.getMember().getAsMention() + " started the no inventory troll for ``" + p14.getName() + "``", Color.RED);
-                p14.sendMessage(ChatColor.DARK_RED + "Your pockets got glued by some bug!" + ChatColor.ITALIC + " (Your pockets can't open for a minute)");
-                e.getHook().sendMessage("You " + e.getMember().getAsMention() + " started the no inventory troll for " + p14.getName()).queue();
-                Bukkit.getScheduler().runTaskLater(Main.plugin, () -> {
-                    Strings.noInv.remove(p14);
-                }, 20 * 60);
+            case "itembreak-modal":
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("itembreak-player")).getAsString(),
+                        p -> {
+                            Bukkit.getScheduler().runTask(Main.plugin, new Runnable() {
+                                @Override
+                                public void run() {
+                                    Strings.itemBreak.put(p, false);
+                                }
+                            });
+                        },
+                        "Item break interaction",
+                        "The next used item will break of ``" + Objects.requireNonNull(e.getValue("itembreak-player")).getAsString() + "``."
+                );
                 break;
 
             case "invite-modal":

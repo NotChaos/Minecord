@@ -6,6 +6,9 @@ import Rest.Strings;
 import Utils.Discord;
 import Utils.Minecraft;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -18,7 +21,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.awt.*;
-import java.util.Objects;
+import java.time.Instant;
+import java.util.*;
+import java.util.List;
 
 import static Rest.Main.serverId;
 
@@ -26,19 +31,19 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
 
     // TODO: Gamemode Dashboard (opens with a button)
     // TODO: Flymode Dashboard
-    // TODO: strike (lightning)
     // TODO: rocket (shoot into sky)
-    // TODO: rotate
     // TODO: anticheat (warning message)
     // TODO: constant jump
     // TODO: tpall
-    // TODO: noinv (inv wont open)  >>> no idea why it doesnt work tbh
     // TODO: fake crash (kicks player)
     // TODO: silent mute
 
 
     public void onButtonInteraction(ButtonInteractionEvent e) {
-        if (!Objects.requireNonNull(e.getGuild()).getId().equals(Strings.guild())) {
+        Guild guild = e.getGuild();
+        User user = e.getUser();
+
+        if (!Objects.requireNonNull(guild).getId().equals(Strings.guild())) {
             e.getChannel().sendMessage(e.getMember().getAsMention() + " this bot is restricted to Galactic Prisons **" + Objects.requireNonNull(DcMain.jda.getTextChannelById(Strings.chat())).createInvite() + "**").queue();
         }
         if (e.getComponentId().equals("playerlist")) {
@@ -48,215 +53,20 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
             return;
         }
 
-        if (Objects.requireNonNull(e.getMember()).getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId()))) {
-            e.deferReply().setEphemeral(true).queue();
-            e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
-            return;
+
+        List<String> roleIds = new ArrayList<>();
+        for (Role role : Objects.requireNonNull(e.getMember()).getRoles()) {
+            roleIds.add(role.getId());
         }
-        switch (e.getComponentId()) {
-            case "playerinfo":
-                if (e.getMember().getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId()))) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
-                    return;
-                }
 
-                TextInput name1 = TextInput.create("playerinfo-player", "information from player", TextInputStyle.SHORT)
-                        .setPlaceholder("Player")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal1 = Modal.create("playerinfo-modal", "Player database")
-                        .addActionRows(ActionRow.of(name1))
-                        .build();
-
-                e.replyModal(modal1).queue();
-                break;
-
-            case "console":
-                TextInput cmd = TextInput.create("console-command", "executing command", TextInputStyle.SHORT)
-                        .setPlaceholder("Command")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal2 = Modal.create("console-modal", "Server Console")
-                        .addActionRows(ActionRow.of(cmd))
-                        .build();
-
-                e.replyModal(modal2).queue();
-                break;
-
-            case "op":
-                TextInput player = TextInput.create("op-player", "giving operator permissions to player", TextInputStyle.SHORT)
-                        .setPlaceholder("Player123Duck")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal3 = Modal.create("op-modal", "Operator Registry")
-                        .addActionRows(ActionRow.of(player))
-                        .build();
-
-                e.replyModal(modal3).queue();
-                break;
-
-            case "kick":
-                if (e.getMember().getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId()))) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
-                    return;
-                }
-                TextInput player2 = TextInput.create("kick-player", "kicking player", TextInputStyle.SHORT)
-                        .setPlaceholder("Command")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                TextInput reason = TextInput.create("kick-player", "reason of kick", TextInputStyle.PARAGRAPH)
-                        .setPlaceholder("Command")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal4 = Modal.create("kick-modal", "Kick Registry")
-                        .addActionRows(ActionRow.of(player2), ActionRow.of(reason))
-                        .build();
-
-                e.replyModal(modal4).queue();
-                break;
-
-            case "ban":
-                TextInput player4 = TextInput.create("ban-player", "banning player", TextInputStyle.SHORT)
-                        .setPlaceholder("Player123Duck")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                TextInput reason4 = TextInput.create("ban-reason", "reason of ban", TextInputStyle.PARAGRAPH)
-                        .setPlaceholder("Hacking,Cheating,X-raying")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                TextInput duration = TextInput.create("ban-time", "duration of ban", TextInputStyle.SHORT)
-                        .setPlaceholder("30d")
-                        .setMinLength(1)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal5 = Modal.create("ban-modal", "Ban Registry")
-                        .addActionRows(ActionRow.of(player4), ActionRow.of(reason4), ActionRow.of(duration))
-                        .build();
-
-                e.replyModal(modal5).queue();
-                break;
-
-            case "broadcast":
-                TextInput title = TextInput.create("broadcast-title", "Title of broadcast", TextInputStyle.SHORT)
-                        .setPlaceholder("Event Announcement")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-                TextInput msg = TextInput.create("broadcast-msg", "Message of broadcast", TextInputStyle.SHORT)
-                        .setPlaceholder("The event starts soon!")
-                        .setMinLength(10)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal6 = Modal.create("broadcast-modal", "Broadcaster")
-                        .addActionRows(ActionRow.of(title), ActionRow.of(msg))
-                        .build();
-
-                e.replyModal(modal6).queue();
-                break;
-
-            case "message":
-                TextInput player7 = TextInput.create("message-player", "The player to send a message", TextInputStyle.SHORT)
-                        .setPlaceholder("Player123Duck")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-                TextInput msg7 = TextInput.create("message-msg", "Content of message", TextInputStyle.PARAGRAPH)
-                        .setPlaceholder("Message")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal7 = Modal.create("message-modal", "Direkt Messenger")
-                        .addActionRows(ActionRow.of(player7), ActionRow.of(msg7))
-                        .build();
-
-                e.replyModal(modal7).queue();
-                break;
-
-            case "moderate2":
-                EmbedBuilder eb3 = Discord.Embed("Server Dashboard", "Click a button to interact with the server or a player.");
-                e.replyEmbeds(eb3.build())
-                        .addActionRow(
-                                Button.primary("moderate1", "previous page"),
-                                Button.secondary("message", "Direkt Message"),
-                                Button.secondary("freeze", "freeze"),
-                                Button.secondary("mute", "mute"))
-                        .queue();
-                break;
-
-            case "moderate1":
-                EmbedBuilder eb4 = Discord.Embed("Moderational Dashboard", "Use these buttons for moderational purposes.");
-                e.replyEmbeds(eb4.build())
-                        .addActionRow(
-                                Button.danger("op", "Op"),
-                                Button.secondary("kick", "Kick"),
-                                Button.secondary("ban", "Ban"),
-                                Button.primary("moderate2", "next page"))
-                        .queue();
-                break;
-
-            case "freeze":
-                TextInput player8 = TextInput.create("freeze-player", "Player to freeze", TextInputStyle.SHORT)
-                        .setPlaceholder("Player123Duck")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-                TextInput msg8 = TextInput.create("freeze-reason", "Reason for freeze", TextInputStyle.PARAGRAPH)
-                        .setPlaceholder("To unfreeze not required")
-                        .setMinLength(3)
-                        .setRequired(false)
-                        .build();
-
-                Modal modal8 = Modal.create("freeze-modal", "Player Freezer")
-                        .addActionRows(ActionRow.of(player8), ActionRow.of(msg8))
-                        .build();
-
-                e.replyModal(modal8).queue();
-                break;
-
-            case "mute":
-                TextInput player9 = TextInput.create("mute-player", "Player to freeze", TextInputStyle.SHORT)
-                        .setPlaceholder("Player123Duck")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-                TextInput reason9 = TextInput.create("mute-duration", "Mute duration", TextInputStyle.SHORT)
-                        .setPlaceholder("10d / 5h / 1m")
-                        .setMinLength(2)
-                        .setRequired(true)
-                        .build();
-                TextInput msg9 = TextInput.create("mute-reason", "Reason for mute", TextInputStyle.PARAGRAPH)
-                        .setPlaceholder("Hacking / Trolling")
-                        .setMinLength(3)
-                        .setRequired(true)
-                        .build();
-
-                Modal modal9 = Modal.create("mute-modal", "Player Muter")
-                        .addActionRows(ActionRow.of(player9), ActionRow.of(reason9), ActionRow.of(msg9))
-                        .build();
-
-                e.replyModal(modal9).queue();
-                break;
+        final Map<String, Long> cooldowns = new HashMap<>();
+        long currentTime = Instant.now().getEpochSecond();
+        long cooldownEndTime = cooldowns.getOrDefault(user, 0L);
+        if (currentTime < cooldownEndTime) {
+                Bukkit.getLogger().info("Still has a cooldown. Time remaining: " + (cooldownEndTime - currentTime) + " seconds");
+                return;
         }
-        if (e.getMember().isOwner() || Strings.trollAccess().contains(e.getMember().getId())) {
+        if (e.getMember().isOwner() || Strings.trollAccess().contains(e.getMember().getId()) || roleIds.contains(Strings.trollRole())) {
             switch (e.getComponentId()) {
                 case "nuke":
                     TextInput name = TextInput.create("nuke-name", "nuking player", TextInputStyle.SHORT)
@@ -359,7 +169,7 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                             .setActionRow(
                                     Button.primary("troll3", "previous page"),
                                     Button.secondary("hack", "start hacks"),
-                                    Button.secondary("noinv", "no inventory"),
+                                    Button.secondary("itembreak", "break item"),
                                     Button.primary("troll5", "next page"))
                             .queue();
                     e.deferEdit().complete();
@@ -419,14 +229,14 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                     e.replyModal(modal2).queue();
                     break;
 
-                case "noinv":
-                    TextInput player3 = TextInput.create("noinv-player", "no inventory for", TextInputStyle.SHORT)
+                case "itembreak":
+                    TextInput player3 = TextInput.create("itembreak-player", "item break for", TextInputStyle.SHORT)
                             .setPlaceholder("Player123Duck")
                             .setMinLength(3)
                             .setRequired(true)
                             .build();
 
-                    Modal modal3 = Modal.create("noinv-modal","Inventory Closer")
+                    Modal modal3 = Modal.create("itembreak-modal","Item Breaker")
                             .addActionRows(ActionRow.of(player3))
                             .build();
 
@@ -473,6 +283,199 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                     e.replyModal(modal12).queue();
                     break;
             }
+            return;
+        }
+
+        if (Objects.requireNonNull(e.getMember()).getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId())) || Objects.requireNonNull(e.getMember()).getRoles().stream().noneMatch(role -> role.getId().equals(Strings.manageRoleId()))) {
+            e.deferReply().setEphemeral(true).queue();
+            e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
+            return;
+        }
+
+        switch (e.getComponentId()) {
+            case "playerinfo":
+                if (e.getMember().getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId()))) {
+                    e.deferReply().setEphemeral(true).queue();
+                    e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
+                    return;
+                }
+
+                TextInput name1 = TextInput.create("playerinfo-player", "information from player", TextInputStyle.SHORT)
+                        .setPlaceholder("Player")
+                        .setMinLength(1)
+                        .setRequired(true)
+                        .build();
+
+                Modal modal1 = Modal.create("playerinfo-modal", "Player database")
+                        .addActionRows(ActionRow.of(name1))
+                        .build();
+
+                e.replyModal(modal1).queue();
+                break;
+
+            case "kick":
+                if (e.getMember().getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId()))) {
+                    e.deferReply().setEphemeral(true).queue();
+                    e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
+                    return;
+                }
+                TextInput player2 = TextInput.create("kick-player", "kicking player", TextInputStyle.SHORT)
+                        .setPlaceholder("Command")
+                        .setMinLength(1)
+                        .setRequired(true)
+                        .build();
+
+                TextInput reason = TextInput.create("kick-player", "reason of kick", TextInputStyle.PARAGRAPH)
+                        .setPlaceholder("Command")
+                        .setMinLength(1)
+                        .setRequired(true)
+                        .build();
+
+                Modal modal4 = Modal.create("kick-modal", "Kick Registry")
+                        .addActionRows(ActionRow.of(player2), ActionRow.of(reason))
+                        .build();
+
+                e.replyModal(modal4).queue();
+                break;
+
+            case "ban":
+                TextInput player4 = TextInput.create("ban-player", "banning player", TextInputStyle.SHORT)
+                        .setPlaceholder("Player123Duck")
+                        .setMinLength(1)
+                        .setRequired(true)
+                        .build();
+
+                TextInput reason4 = TextInput.create("ban-reason", "reason of ban", TextInputStyle.PARAGRAPH)
+                        .setPlaceholder("Hacking,Cheating,X-raying")
+                        .setMinLength(1)
+                        .setRequired(true)
+                        .build();
+
+                TextInput duration = TextInput.create("ban-time", "duration of ban", TextInputStyle.SHORT)
+                        .setPlaceholder("30d")
+                        .setMinLength(1)
+                        .setRequired(true)
+                        .build();
+
+                Modal modal5 = Modal.create("ban-modal", "Ban Registry")
+                        .addActionRows(ActionRow.of(player4), ActionRow.of(reason4), ActionRow.of(duration))
+                        .build();
+
+                e.replyModal(modal5).queue();
+                break;
+
+            case "broadcast":
+                if (e.getMember().getRoles().stream().noneMatch(role -> role.getId().equals(Strings.broadcastRoleId())) || e.getMember().getRoles().stream().noneMatch(role -> role.getId().equals(Strings.staffRoleId()))) {
+                    e.deferReply().setEphemeral(true).queue();
+                    e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
+                    return;
+                }
+                TextInput title = TextInput.create("broadcast-title", "Title of broadcast", TextInputStyle.SHORT)
+                        .setPlaceholder("Event Announcement")
+                        .setMinLength(3)
+                        .setRequired(true)
+                        .build();
+                TextInput msg = TextInput.create("broadcast-msg", "Message of broadcast", TextInputStyle.SHORT)
+                        .setPlaceholder("The event starts soon!")
+                        .setMinLength(10)
+                        .setRequired(true)
+                        .build();
+
+                Modal modal6 = Modal.create("broadcast-modal", "Broadcaster")
+                        .addActionRows(ActionRow.of(title), ActionRow.of(msg))
+                        .build();
+
+                e.replyModal(modal6).queue();
+                break;
+
+            case "message":
+                TextInput player7 = TextInput.create("message-player", "The player to send a message", TextInputStyle.SHORT)
+                        .setPlaceholder("Player123Duck")
+                        .setMinLength(3)
+                        .setRequired(true)
+                        .build();
+                TextInput msg7 = TextInput.create("message-msg", "Content of message", TextInputStyle.PARAGRAPH)
+                        .setPlaceholder("Message")
+                        .setMinLength(3)
+                        .setRequired(true)
+                        .build();
+
+                Modal modal7 = Modal.create("message-modal", "Direkt Messenger")
+                        .addActionRows(ActionRow.of(player7), ActionRow.of(msg7))
+                        .build();
+
+                e.replyModal(modal7).queue();
+                break;
+
+            case "moderate2":
+                EmbedBuilder eb3 = Discord.Embed("Server Dashboard", "Click a button to interact with the server or a player.");
+                e.replyEmbeds(eb3.build())
+                        .addActionRow(
+                                Button.primary("moderate1", "previous page"),
+                                Button.secondary("message", "Direkt Message"),
+                                Button.secondary("freeze", "freeze"),
+                                Button.secondary("mute", "mute"))
+                        .queue();
+                break;
+
+            case "moderate1":
+                EmbedBuilder eb4 = Discord.Embed("Moderational Dashboard", "Use these buttons for moderational purposes.");
+                e.replyEmbeds(eb4.build())
+                        .addActionRow(
+                                Button.danger("op", "Op"),
+                                Button.secondary("kick", "Kick"),
+                                Button.secondary("ban", "Ban"),
+                                Button.primary("moderate2", "next page"))
+                        .queue();
+                break;
+
+            case "freeze":
+                TextInput player8 = TextInput.create("freeze-player", "Player to freeze", TextInputStyle.SHORT)
+                        .setPlaceholder("Player123Duck")
+                        .setMinLength(3)
+                        .setRequired(true)
+                        .build();
+                TextInput msg8 = TextInput.create("freeze-reason", "Reason for freeze", TextInputStyle.PARAGRAPH)
+                        .setPlaceholder("To unfreeze not required")
+                        .setMinLength(3)
+                        .setRequired(false)
+                        .build();
+
+                Modal modal8 = Modal.create("freeze-modal", "Player Freezer")
+                        .addActionRows(ActionRow.of(player8), ActionRow.of(msg8))
+                        .build();
+
+                e.replyModal(modal8).queue();
+                break;
+
+            case "mute":
+                TextInput player9 = TextInput.create("mute-player", "Player to freeze", TextInputStyle.SHORT)
+                        .setPlaceholder("Player123Duck")
+                        .setMinLength(3)
+                        .setRequired(true)
+                        .build();
+                TextInput reason9 = TextInput.create("mute-duration", "Mute duration", TextInputStyle.SHORT)
+                        .setPlaceholder("10d / 5h / 1m")
+                        .setMinLength(2)
+                        .setRequired(true)
+                        .build();
+                TextInput msg9 = TextInput.create("mute-reason", "Reason for mute", TextInputStyle.PARAGRAPH)
+                        .setPlaceholder("Hacking / Trolling")
+                        .setMinLength(3)
+                        .setRequired(true)
+                        .build();
+
+                Modal modal9 = Modal.create("mute-modal", "Player Muter")
+                        .addActionRows(ActionRow.of(player9), ActionRow.of(reason9), ActionRow.of(msg9))
+                        .build();
+
+                e.replyModal(modal9).queue();
+                break;
+        }
+
+        if (Objects.requireNonNull(e.getMember()).getRoles().stream().noneMatch(role -> role.getId().equals(Strings.manageRoleId()))) {
+            e.deferReply().setEphemeral(true).queue();
+            e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
             return;
         }
 
@@ -569,6 +572,33 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                     e.replyModal(modal4).queue();
                     break;
 
+                case "console":
+                    TextInput cmd = TextInput.create("console-command", "executing command", TextInputStyle.SHORT)
+                            .setPlaceholder("Command")
+                            .setMinLength(1)
+                            .setRequired(true)
+                            .build();
+
+                    Modal modal2 = Modal.create("console-modal", "Server Console")
+                            .addActionRows(ActionRow.of(cmd))
+                            .build();
+
+                    e.replyModal(modal2).queue();
+                    break;
+
+                case "op":
+                    TextInput player1 = TextInput.create("op-player", "giving operator permissions to player", TextInputStyle.SHORT)
+                            .setPlaceholder("Player123Duck")
+                            .setMinLength(3)
+                            .setRequired(true)
+                            .build();
+
+                    Modal modal3 = Modal.create("op-modal", "Operator Registry")
+                            .addActionRows(ActionRow.of(player1))
+                            .build();
+
+                    e.replyModal(modal3).queue();
+                    break;
             }
         } else {
             e.getChannel().sendMessage(e.getMember().getAsMention() + " you don't have permission to use this.").queue();
