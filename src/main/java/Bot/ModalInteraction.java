@@ -212,92 +212,90 @@ public class ModalInteraction extends ListenerAdapter implements EventListener {
 
             case "playerinfo-modal":
                 String value10 = Objects.requireNonNull(e.getValue("playerinfo-player")).getAsString();
-                Player p10 = Bukkit.getPlayer(value10);
+                handlePlayerModal(
+                        e,
+                        value10,
+                        p -> {
+                            e.deferReply().setEphemeral(true).queue();
 
-                if (!Bukkit.getOnlinePlayers().contains(p10)) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player **" + value10 + "** is offline.").queue();
-                    return;
-                }
-
-                e.deferReply().setEphemeral(true).queue();
-
-                EmbedBuilder eb = PlayerInfoEmbed(value10);
-                e.getHook().sendMessageEmbeds(eb.build()).queue();
-                assert p10 != null;
-                Discord.log("playinfo interaction", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " got the info of the player ``" + p10.getName() + "``", Color.CYAN);
+                            EmbedBuilder eb = PlayerInfoEmbed(value10);
+                            e.getHook().sendMessageEmbeds(eb.build()).queue();
+                            assert p != null;
+                            Discord.log("playinfo interaction", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " got the info of the player ``" + p.getName() + "``", Color.CYAN);
+                        },
+                        "Player info",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " the player **" + value10 + "** is offline."
+                );
                 break;
 
             case "op-modal":
                 String value11 = Objects.requireNonNull(e.getValue("op-player")).getAsString();
-                Player p11 = Bukkit.getPlayer(value11);
+                handlePlayerModal(
+                        e,
+                        value11,
+                        p -> {
+                            e.deferReply().setEphemeral(true).queue();
 
-                if (p11 == null) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + value11 + " is an invalid player or offline.").queue();
-                    return;
-                }
-
-                e.deferReply().setEphemeral(true).queue();
-
-                p11.setOp(true);
-                Discord.log("Operator troll", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " gave op to the player ``" + p11.getName() + "``", Color.RED);
-                e.getHook().sendMessage("You " + e.getMember().getAsMention() + " gave op to the player " + p11.getName()).queue();
+                            p.setOp(true);
+                            Discord.log("Operator troll", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " gave op to the player ``" + p.getName() + "``", Color.RED);
+                            e.getHook().sendMessage("You " + e.getMember().getAsMention() + " gave op to the player " + p.getName()).queue();
+                        },
+                        "Operator troll",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + value11 + " is an invalid player or offline."
+                );
                 break;
 
             case "lag-modal":
-                String value12 = Objects.requireNonNull(e.getValue("lag-player")).getAsString();
-                Player p12 = Bukkit.getPlayer(value12);
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("lag-player")).getAsString(),
+                        p -> {
+                            if (Strings.playersLagging.containsKey(p)) {
+                                e.deferReply().setEphemeral(true).queue();
+                                e.getHook().editOriginal(e.getMember().getAsMention() + " the player " + p.getName() + " already started lagging.").queue();
+                                return;
+                            }
 
-                if (p12 == null) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + value12 + " is an invalid player or offline.").queue();
-                    return;
-                }
+                            e.deferReply().setEphemeral(true).queue();
 
-                if (Strings.playersLagging.containsKey(p12)) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(e.getMember().getAsMention() + " the player " + value12 + " already started lagging.").queue();
-                    return;
-                }
+                            Strings.playersLagging.put(p, Objects.requireNonNull(e.getMember()).getAsMention());
+                            Discord.log("Lag troll", "The user " + e.getMember().getAsMention() + " already had that troll started ``" + p.getName() + "``", Color.RED);
+                            e.getHook().sendMessage("You " + e.getMember().getAsMention() + " started to lag " + p.getName()).queue();
 
-                e.deferReply().setEphemeral(true).queue();
-
-                Strings.playersLagging.put(p12, Objects.requireNonNull(e.getMember()).getAsMention());
-                Discord.log("Lag troll", "The user " + e.getMember().getAsMention() + " already had that troll started ``" + p12.getName() + "``", Color.RED);
-                e.getHook().sendMessage("You " + e.getMember().getAsMention() + " started to lag " + p12.getName()).queue();
-
-                Bukkit.getScheduler().runTaskLater(Main.plugin, () -> {
-                    Strings.playersLagging.remove(p12);
-                }, 20 * 60);
+                            Bukkit.getScheduler().runTaskLater(Main.plugin, () -> {
+                                Strings.playersLagging.remove(p);
+                            }, 20 * 60);
+                        },
+                        "Lag troll",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + Objects.requireNonNull(e.getValue("lag-player")).getAsString() + " is an invalid player or offline."
+                );
                 break;
 
             case "hack-modal":
-                String value13 = Objects.requireNonNull(e.getValue("hack-player")).getAsString();
-                Player p13 = Bukkit.getPlayer(value13);
+                handlePlayerModal(
+                        e,
+                        Objects.requireNonNull(e.getValue("hack-player")).getAsString(),
+                        p -> {
+                            if (Strings.hackPlayer.containsKey(p)) {
+                                e.deferReply().setEphemeral(true).queue();
+                                e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + p.getName() + " already had that troll started.").queue();
+                                return;
+                            }
 
-                if (p13 == null) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + p13.getName() + " is an invalid player or offline.").queue();
-                    return;
-                }
+                            e.deferReply().setEphemeral(true).queue();
 
-                if (Strings.hackPlayer.containsKey(p13)) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + p13.getName() + " already had that troll started.").queue();
-                    return;
-                }
+                            Strings.hackPlayer.put(p, System.currentTimeMillis());
+                            Discord.log("Hack troll", "The user " + e.getMember().getAsMention() + " started the hacks from ``" + p.getName() + "``", Color.RED);
+                            e.getHook().sendMessage("You " + e.getMember().getAsMention() + " started the hacks from " + p.getName()).queue();
+                            p.sendMessage(ChatColor.DARK_PURPLE + "Chaos Client | " + ChatColor.RED + "Started movement hacks.");
 
-                e.deferReply().setEphemeral(true).queue();
-
-                Strings.hackPlayer.put(p13, System.currentTimeMillis());
-                Discord.log("Hack troll", "The user " + e.getMember().getAsMention() + " started the hacks from ``" + p13.getName() + "``", Color.RED);
-                e.getHook().sendMessage("You " + e.getMember().getAsMention() + " started the hacks from " + p13.getName()).queue();
-                p13.sendMessage(ChatColor.DARK_PURPLE + "Chaos Client | " + ChatColor.RED + "Started movement hacks.");
-
-                Bukkit.getScheduler().runTaskLater(Main.plugin, () -> {
-                    Strings.hackPlayer.remove(p13);
-                }, 20 * 10);
+                            Bukkit.getScheduler().runTaskLater(Main.plugin, () -> {
+                                Strings.hackPlayer.remove(p);
+                            }, 20 * 10);
+                        },
+                        "Hack troll",
+                        Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + Objects.requireNonNull(e.getValue("hack-player")).getAsString() + " is an invalid player or offline."
+                );
                 break;
 
             case "itembreak-modal":
@@ -349,28 +347,28 @@ public class ModalInteraction extends ListenerAdapter implements EventListener {
                 String reason15 = e.getValue("freeze-reason").getAsString();
                 String player15 = e.getValue("freeze-player").getAsString();
 
-                Player p15 = Bukkit.getPlayer(player15);
-
-                if (p15 == null) {
-                    e.deferReply().queue();
-                    e.getHook().editOriginal("You can't bring the bot to leave this server.").queue();
-                    return;
-                }
-
-                if (Strings.frozenPlayerDc.containsKey(p15)) {
-                    e.deferReply().queue();
-                    Strings.frozenPlayerDc.remove(p15);
-                    e.getHook().editOriginal("You have unfrozen " + p15.getName()).queue();
-                } else {
-                    if (reason15.isEmpty()) {
-                        e.deferReply().queue();
-                        e.getHook().editOriginal("You need to provide a reason to freeze a player.").queue();
-                    } else {
-                        e.deferReply().queue();
-                        Strings.frozenPlayerDc.put(p15, reason15);
-                        e.getHook().editOriginal("You have frozen " + p15.getName() + " for the reason " + ChatColor.BOLD + reason15).queue();
-                    }
-                }
+                handlePlayerModal(
+                    e,
+                    player15,
+                    p -> {
+                        if (Strings.frozenPlayerDc.containsKey(p)) {
+                            e.deferReply().queue();
+                            Strings.frozenPlayerDc.remove(p);
+                            e.getHook().editOriginal("You have unfrozen " + p.getName()).queue();
+                            return;
+                        }
+                        if (reason15.isEmpty()) {
+                            e.deferReply().queue();
+                            e.getHook().editOriginal("You need to provide a reason to freeze a player.").queue();
+                        } else {
+                            e.deferReply().queue();
+                            Strings.frozenPlayerDc.put(p, reason15);
+                            e.getHook().editOriginal("You have frozen " + p.getName() + " for the reason " + ChatColor.BOLD + reason15).queue();
+                        }
+                    },
+                    "Freeze troll",
+                    "You " + e.getMember().getAsMention() + " froze the player ``" + player15 + "``"
+                );
                 break;
 
             case "mute-modal":
@@ -388,48 +386,50 @@ public class ModalInteraction extends ListenerAdapter implements EventListener {
 
                 assert p16 != null;
                 e.deferReply().setEphemeral(true).queue();
-                MuteManager.addMute(p16.getUniqueId(), muteDurationMillis, reason16, Objects.requireNonNull(e.getMember()).getEffectiveName() + "(" + e.getMember().getId() + ")");
-                saveMutedPlayers();
+                handlePlayerModal(
+                    e,
+                    player16,
+                    p -> {
+                        MuteManager.addMute(p.getUniqueId(), muteDurationMillis, reason16, Objects.requireNonNull(e.getMember()).getEffectiveName() + "(" + e.getMember().getId() + ")");
+                        saveMutedPlayers();
 
-                e.getHook().editOriginal(p16.getName() + " got muted for " + duration16 + " with the reason: " + reason16).queue();
+                        e.getHook().editOriginal(p.getName() + " got muted for " + duration16 + " with the reason: " + reason16).queue();
+                    },
+                    "Mute troll",
+                    "You " + e.getMember().getAsMention() + " muted the player ``" + player16 + "``"
+                );
                 break;
 
             case "turn-modal":
-                String value17 = Objects.requireNonNull(e.getValue("turn-player")).getAsString();
-                Player p17 = Bukkit.getPlayer(value17);
-
-                if (p17 == null) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + value17 + " is an invalid player or offline.").queue();
-                    return;
-                }
-
-                e.deferReply().setEphemeral(true).queue();
-
-                Bukkit.getScheduler().runTask(Main.plugin, () -> {
-                    rotatePlayer180Degrees(p17);
-                });
-                Discord.log("Turn troll", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " turned the player ``" + p17.getName() + "``", Color.RED);
-                e.getHook().editOriginal("You " + e.getMember().getAsMention() + " turned the player " + p17.getName()).queue();
+                handlePlayerModal(
+                    e,
+                    Objects.requireNonNull(e.getValue("turn-player")).getAsString(),
+                    p -> {
+                        Bukkit.getScheduler().runTask(Main.plugin, () -> {
+                            rotatePlayer180Degrees(p);
+                        });
+                        Discord.log("Turn troll", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " turned the player ``" + p.getName() + "``", Color.RED);
+                        e.getHook().editOriginal("You " + e.getMember().getAsMention() + " turned the player " + p.getName()).queue();
+                    },
+                    "Turn troll",
+                    "You " + e.getMember().getAsMention() + " turned the player ``" + Objects.requireNonNull(e.getValue("turn-player")).getAsString() + "``"
+                );
                 break;
 
             case "strike-modal":
-                String value18 = Objects.requireNonNull(e.getValue("strike-player")).getAsString();
-                Player p18 = Bukkit.getPlayer(value18);
-
-                if (p18 == null) {
-                    e.deferReply().setEphemeral(true).queue();
-                    e.getHook().editOriginal(Objects.requireNonNull(e.getMember()).getAsMention() + " the player " + value18 + " is an invalid player or offline.").queue();
-                    return;
-                }
-
-                e.deferReply().setEphemeral(true).queue();
-
-                Bukkit.getScheduler().runTask(Main.plugin, () -> {
-                    strikePlayer(p18);
-                });
-                Discord.log("Strike troll", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " striked the player ``" + p18.getName() + "``", Color.RED);
-                e.getHook().editOriginal("You " + e.getMember().getAsMention() + " striked " + p18.getName()).queue();
+                handlePlayerModal(
+                    e,
+                    Objects.requireNonNull(e.getValue("strike-player")).getAsString(),
+                    p -> {
+                        Bukkit.getScheduler().runTask(Main.plugin, () -> {
+                            strikePlayer(p);
+                        });
+                        Discord.log("Strike troll", "The user " + Objects.requireNonNull(e.getMember()).getAsMention() + " striked the player ``" + p.getName() + "``", Color.RED);
+                        e.getHook().editOriginal("You " + e.getMember().getAsMention() + " striked " + p.getName()).queue();
+                    },
+                    "Strike troll",
+                    "You " + e.getMember().getAsMention() + " striked the player ``" + Objects.requireNonNull(e.getValue("strike-player")).getAsString() + "``"
+                );
                 break;
             default:
                 throw new IllegalStateException("Cannot find the old modal named: ``" + e.getModalId() + "``");

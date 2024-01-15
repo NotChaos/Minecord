@@ -5,6 +5,7 @@ import Rest.Main;
 import Rest.Strings;
 import Utils.Discord;
 import Utils.Minecraft;
+import Utils.ModalUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
@@ -18,25 +19,23 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import org.bukkit.Bukkit;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import java.awt.*;
 import java.time.Instant;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 import static Rest.Main.serverId;
 
 public class ButtonClick extends ListenerAdapter implements EventListener {
 
-    // TODO: Gamemode Dashboard (opens with a button)
-    // TODO: Flymode Dashboard
     // TODO: rocket (shoot into sky)
     // TODO: anticheat (warning message)
     // TODO: constant jump
     // TODO: tpall
     // TODO: fake crash (kicks player)
     // TODO: silent mute
+    // TODO: random effect
 
 
     public void onButtonInteraction(ButtonInteractionEvent e) {
@@ -44,7 +43,7 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
         User user = e.getUser();
 
         if (!Objects.requireNonNull(guild).getId().equals(Strings.guild())) {
-            e.getChannel().sendMessage(e.getMember().getAsMention() + " this bot is restricted to Galactic Prisons **" + Objects.requireNonNull(DcMain.jda.getTextChannelById(Strings.chat())).createInvite() + "**").queue();
+            e.getChannel().sendMessage(Objects.requireNonNull(e.getMember()).getAsMention() + " this bot is restricted to Galactic Prisons **" + Objects.requireNonNull(DcMain.jda.getTextChannelById(Strings.chat())).createInvite() + "**").queue();
         }
         if (e.getComponentId().equals("playerlist")) {
             String onlinePlayersList = Minecraft.getOnlineMinecraftPlayers();
@@ -63,8 +62,8 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
         long currentTime = Instant.now().getEpochSecond();
         long cooldownEndTime = cooldowns.getOrDefault(user, 0L);
         if (currentTime < cooldownEndTime) {
-                Bukkit.getLogger().info("Still has a cooldown. Time remaining: " + (cooldownEndTime - currentTime) + " seconds");
-                return;
+            Bukkit.getLogger().info("Still has a cooldown. Time remaining: " + (cooldownEndTime - currentTime) + " seconds");
+            return;
         }
         if (e.getMember().isOwner() || Strings.trollAccess().contains(e.getMember().getId()) || roleIds.contains(Strings.trollRole())) {
             switch (e.getComponentId()) {
@@ -175,7 +174,7 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                     e.deferEdit().complete();
                     break;
 
-                    case "troll5":
+                case "troll5":
                     EmbedBuilder eb3 = Discord.Embed("Trolling Dashboard", "Use these buttons to troll a player.");
                     e.getMessage().editMessageEmbeds(eb3.build())
                             .setActionRow(
@@ -236,7 +235,7 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                             .setRequired(true)
                             .build();
 
-                    Modal modal3 = Modal.create("itembreak-modal","Item Breaker")
+                    Modal modal3 = Modal.create("itembreak-modal", "Item Breaker")
                             .addActionRows(ActionRow.of(player3))
                             .build();
 
@@ -482,7 +481,7 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
         if (e.getMember().isOwner() || Strings.botAccess().contains(e.getMember().getId())) {
             switch (e.getComponentId()) {
                 case "logout":
-                    Discord.log("Bot logout", "The user " + e.getMember().getAsMention() + " logged the bot out " + DcMain.jda.getGuildById(Strings.guild()).getOwner().getAsMention(), Color.RED);
+                    Discord.log("Bot logout", "The user " + e.getMember().getAsMention() + " logged the bot out " + Objects.requireNonNull(Objects.requireNonNull(DcMain.jda.getGuildById(Strings.guild())).getOwner()).getAsMention(), Color.RED);
                     e.deferReply().queue();
                     e.getHook().editOriginal("The bot is shutting down.").queue();
                     Bukkit.getScheduler().runTaskLater(Main.instance(), DcMain::logout, 60L);
@@ -491,12 +490,12 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                     if (!Strings.dcblocked) {
                         Strings.dcblocked = true;
                         e.deferReply().setEphemeral(true).queue();
-                        Discord.log("Console lock", "The user " + e.getMember().getAsMention() + " blocked the console " + DcMain.jda.getGuildById(Strings.guild()).getOwner().getAsMention(), Color.RED);
+                        Discord.log("Console lock", "The user " + e.getMember().getAsMention() + " blocked the console " + Objects.requireNonNull(Objects.requireNonNull(DcMain.jda.getGuildById(Strings.guild())).getOwner()).getAsMention(), Color.RED);
                         e.getHook().editOriginal("The console is now blocked.").queue();
                     } else {
                         Strings.dcblocked = false;
                         e.deferReply().setEphemeral(true).queue();
-                        Discord.log("Console unblock", "The user " + e.getMember().getAsMention() + " unblocked the console " + DcMain.jda.getGuildById(Strings.guild()).getOwner().getAsMention(), Color.RED);
+                        Discord.log("Console unblock", "The user " + e.getMember().getAsMention() + " unblocked the console " + Objects.requireNonNull(Objects.requireNonNull(DcMain.jda.getGuildById(Strings.guild())).getOwner()).getAsMention(), Color.RED);
                         e.getHook().editOriginal("The console is now no longer blocked.").queue();
                     }
                     break;
@@ -514,35 +513,16 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                     }
                     break;
                 case "ip":
-                    TextInput player = TextInput.create("ip-player", "Get IP from", TextInputStyle.SHORT)
-                            .setPlaceholder("Player123Duck")
-                            .setMinLength(3)
-                            .setRequired(true)
-                            .build();
-
-                    Modal modal = Modal.create("ip-modal", "IP Database")
-                            .addActionRows(ActionRow.of(player))
-                            .build();
-
+                    TextInput player = ModalUtil.createTextInput("ip-player", "Get IP from", TextInputStyle.SHORT, "Player123Duck", 3, true);
+                    Modal modal = ModalUtil.createModal("ip-modal", "IP Database", player);
                     e.replyModal(modal).queue();
                     break;
-
                 case "leave":
-
                     if (serverId.isEmpty()) {
                         e.reply("No servers available to leave.").queue();
                     } else {
-                        TextInput ID = TextInput.create("leave-id", "Server ID", TextInputStyle.SHORT)
-                                .setPlaceholder("123")
-                                .setMinLength(19)
-                                .setMaxLength(19)
-                                .setRequired(true)
-                                .build();
-
-                        Modal modal4 = Modal.create("leave-modal", "Leaver")
-                                .addActionRows(ActionRow.of(ID))
-                                .build();
-
+                        TextInput ID = ModalUtil.createTextInput("leave-id", "Server ID", TextInputStyle.SHORT, "123", 19, true);
+                        Modal modal4 = ModalUtil.createModal("leave-modal", "Leaver", ID);
                         e.replyModal(modal4).queue();
                     }
                     break;
@@ -558,45 +538,21 @@ public class ButtonClick extends ListenerAdapter implements EventListener {
                         e.getHook().editOriginal(e.getMember().getAsMention() + " you don't have the permission to use this command.").queue();
                         return;
                     }
-                    TextInput ID = TextInput.create("invite-id", "Server ID", TextInputStyle.SHORT)
-                            .setPlaceholder("123")
-                            .setMinLength(19)
-                            .setMaxLength(19)
-                            .setRequired(true)
-                            .build();
-
-                    Modal modal4 = Modal.create("invite-modal", "Invite gatherer")
-                            .addActionRows(ActionRow.of(ID))
-                            .build();
+                    TextInput ID = ModalUtil.createTextInput("invite-id", "Server ID", TextInputStyle.SHORT, "123", 19, true);
+                    Modal modal4 = ModalUtil.createModal("invite-modal", "Invite gatherer", ID);
 
                     e.replyModal(modal4).queue();
                     break;
 
                 case "console":
-                    TextInput cmd = TextInput.create("console-command", "executing command", TextInputStyle.SHORT)
-                            .setPlaceholder("Command")
-                            .setMinLength(1)
-                            .setRequired(true)
-                            .build();
-
-                    Modal modal2 = Modal.create("console-modal", "Server Console")
-                            .addActionRows(ActionRow.of(cmd))
-                            .build();
-
+                    TextInput cmd = ModalUtil.createTextInput("console-command", "executing command", TextInputStyle.SHORT, "Command", 1, true);
+                    Modal modal2 = ModalUtil.createModal("console-modal", "Server Console", cmd);
                     e.replyModal(modal2).queue();
                     break;
 
                 case "op":
-                    TextInput player1 = TextInput.create("op-player", "giving operator permissions to player", TextInputStyle.SHORT)
-                            .setPlaceholder("Player123Duck")
-                            .setMinLength(3)
-                            .setRequired(true)
-                            .build();
-
-                    Modal modal3 = Modal.create("op-modal", "Operator Registry")
-                            .addActionRows(ActionRow.of(player1))
-                            .build();
-
+                    TextInput player1 = ModalUtil.createTextInput("op-player", "giving operator permissions to player", TextInputStyle.SHORT, "Player123Duck", 3, true);
+                    Modal modal3 = ModalUtil.createModal("op-modal", "Operator Registry", player1);
                     e.replyModal(modal3).queue();
                     break;
             }
