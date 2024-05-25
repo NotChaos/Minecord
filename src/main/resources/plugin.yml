@@ -1,20 +1,21 @@
-name: Minecord
+name: XRAY
+author: Chaos
 version: '${project.version}'
-main: Rest.Main
-api-version: '1.18'
+main: com.duckydeveloper.Main
+api-version: '1.20'
 commands:
   Minecord:
     description: Commands which interact with the plugin itself.
-    permission: Minecord.reload
+    permission: XRAY.reload
   Blockdc:
     description: Blocks the console from discord.
-    permission: Minecord.blockdc
+    permission: XRAY.blockdc
   freeze:
     description: Freezes the chosen player.
-    permission: Minecord.freeze
+    permission: XRAY.freeze
   tempmute:
     description: Mutes a player.
-    permission: Minecord.mute
+    permission: XRAY.mute
   unmute:
     description: Unmutes a player.
-    permission: Minecord.unmute
+    permission: XRAY.unmute
